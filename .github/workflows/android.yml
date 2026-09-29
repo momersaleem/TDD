@@ -1,0 +1,46 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: JDK 17 setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Gradle setup (cache ke saath)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: gradlew ko executable banao
+        run: chmod +x ./gradlew
+
+      - name: Unit tests chalao
+        run: ./gradlew testDebugUnitTest
+
+      - name: Debug APK banao
+        run: ./gradlew assembleDebug
+
+      - name: APK upload karo
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Test report upload karo (fail hone par bhi)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
